@@ -41,6 +41,7 @@ class AudioSource {
 	private var pauseTime:Int;
 	private var __length:Null<Int>;
 	private var __loops:Int;
+	private var samples:Int;
 	
 	#if flash
 	private var channel:SoundChannel;
@@ -143,8 +144,9 @@ class AudioSource {
 			default:
 			
 		}
-		
-	}
+
+		samples = Std.int ((dataLength * 8) / (parent.buffer.channels * parent.buffer.bitsPerSample));
+	}	
 	
 	
 	public function play ():Void {
@@ -410,7 +412,10 @@ class AudioSource {
 		
 		#else
 		
-		var time = Std.int (AL.getSourcef (id, AL.SEC_OFFSET) * 1000) - offset;
+		var offset = AL.getSourcei (handle, AL.BYTE_OFFSET);
+		var ratio = (offset / dataLength);
+		var totalSeconds = samples / parent.buffer.sampleRate;
+		var time = Std.int (totalSeconds * ratio * 1000) - parent.offset;
 		if (time < 0) return 0;
 		return time;
 		
@@ -547,7 +552,6 @@ class AudioSource {
 		
 		#else
 		
-		var samples = (buffer.data.length * 8) / (buffer.channels * buffer.bitsPerSample);
 		return Std.int (samples / buffer.sampleRate * 1000) - offset;
 		
 		#end
